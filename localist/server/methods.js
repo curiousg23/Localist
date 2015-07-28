@@ -11,6 +11,10 @@ Meteor.methods({
             text: msg
         });
 
+        Emails.insert({
+            email: email
+        });
+
         return "no issues";
     }
 });

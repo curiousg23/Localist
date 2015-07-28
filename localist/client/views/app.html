@@ -1,0 +1,10 @@
+<template name="app">
+    <header>
+        <div class="header-content">
+            {{> navbar}}
+            <div class="map-container">
+                {{> googleMap name="appMap" options=appMapOptions}}
+            </div>
+        </div>
+    </header>
+</template>

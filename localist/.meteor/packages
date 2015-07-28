@@ -12,3 +12,5 @@ jquery
 email
 fortawesome:fontawesome
 dfischer:prerenderio
+iron:router
+dburles:google-maps

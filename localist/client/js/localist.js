@@ -9,6 +9,11 @@ Template.main.events({
                 console.log(res);
             }
         });
+        $('#email-addr').val("");
         Session.set('userSubscribed', true);
     }
 });
+
+Template.main.userSubscribed = function(){
+    return Session.get('userSubscribed');
+}
