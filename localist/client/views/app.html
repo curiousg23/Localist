@@ -1,10 +1,24 @@
 <template name="app">
     <header>
-        <div class="header-content">
+        <!-- <div class="header-content" style="max-height:100%;"> -->
             {{> navbar}}
-            <div class="map-container">
-                {{> googleMap name="appMap" options=appMapOptions}}
+            <br>
+            <div class="overmap-container">
+                {{#if insertingMarker}}
+                    {{> insertMarker}}
+                {{else}} {{#if newMarkerAdded}}
+                    {{> askAddMarker}}
+                {{else}}
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                {{/if}}{{/if}}
             </div>
-        </div>
+            <div class="map-container">
+                {{#unless geolocationFails}}
+                    {{> googleMap name="appMap" options=appMapOptions}}
+                {{else}}
+                    {{> googleMap name="appMap" options=stdMapOptions}}
+                {{/unless}}
+            </div>
+        <!-- </div> -->
     </header>
 </template>
