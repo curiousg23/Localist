@@ -19,5 +19,9 @@
 <template name="markerInfo">
     <h4>{{title}}</h4>
     <p>{{description}}</p>
-    <button class="btn btn-default" id="go-to-street">Go to Street View</button>
+    {{#if streetView}}
+        <button class="btn btn-default" id="back-to-map">Back to the Map</button>
+    {{else}}
+        <button class="btn btn-default" id="go-to-street">Go to Street View</button>
+    {{/if}}
 </template>

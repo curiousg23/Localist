@@ -7,11 +7,6 @@ Template.app.events({
         var panorama = map.getStreetView();
 
         var point = new google.maps.LatLng(Session.get('newMarkerAddedLat'), Session.get('newMarkerAddedLng'));
-        // panorama.setPosition(point);
-        // panorama.setPov({
-        //     heading:45,
-        //     pitch:10
-        // });
         var panoramaOptions = {
             enableCloseButton: false,
             position: point,
@@ -60,12 +55,51 @@ Template.app.events({
         var map = GoogleMaps.maps.appMap.instance;
         var panorama = map.getStreetView();
         if(panorama){
+            if(tempMarker){
+                tempMarker.setMap(null);
+            }
             var pos = panorama.getLocation();
             panorama.setVisible(false);
             var description = $('.marker-description').val();
             var title = $('.marker-title').val();
             // turn this insertion into a meteor.method
-            Markers.insert({lat: pos.latLng.G, lng: pos.latLng.K, description: description, title: title});
+            Markers.insert({lat: pos.latLng.G,
+                lng: pos.latLng.K,
+                description: description,
+                title: title,
+                position: panorama.getPosition(),
+                pov: panorama.getPov(),
+                zoom: panorama.getZoom()
+            });
+        }
+    },
+    // street view of someone's marker
+    'click #go-to-street': function(){
+        Session.set('isInStreetView', true);
+        var map = GoogleMaps.maps.appMap.instance;
+        var panorama = map.getStreetView();
+        var panoObj = Markers.find({_id: Session.get('markerId')}).fetch()[0];
+        console.log(panoObj);
+        var panoramaOptions = {
+            enableCloseButton: false,
+            position: new google.maps.LatLng(panoObj.position.G, panoObj.position.K),
+            pov: {
+                heading: panoObj.pov.heading,
+                pitch: panoObj.pov.pitch,
+                zoom: panoObj.zoom
+            },
+            linksControl: false
+        }
+        panorama.setOptions(panoramaOptions);
+        panorama.setVisible(true);
+    },
+    // go back to the map
+    'click #back-to-map': function(){
+        Session.set('isInStreetView', false);
+        var map = GoogleMaps.maps.appMap.instance;
+        var panorama = map.getStreetView();
+        if(panorama){
+            panorama.setVisible(false);
         }
     }
 });
@@ -118,6 +152,10 @@ Template.markerInfo.helpers({
 
     description: function(){
         return Session.get('markerDescription');
+    },
+
+    streetView: function(){
+        return Session.get('isInStreetView');
     }
 })
 
@@ -138,7 +176,6 @@ Template.app.onCreated(function(){
                 Session.set('newMarkerAdded', true);
                 Session.set('newMarkerAddedLat', evt.latLng.G);
                 Session.set('newMarkerAddedLng', evt.latLng.K);
-                // Markers.insert({lat: evt.latLng.G, lng: evt.latLng.K});
         });
 
         var markers = {};
@@ -156,6 +193,7 @@ Template.app.onCreated(function(){
                 google.maps.event.addListener(markers[marker.id], 'click', function(){
                     console.log('marker clicked');
                     Session.set('displayInfo', true);
+                    Session.set('markerId', marker.id);
                 });
             },
 
