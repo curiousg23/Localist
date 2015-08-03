@@ -8,9 +8,16 @@
 
 <template name="insertMarker">
     <h4>Describe the location here:</h4>
+    <input class="marker-title">
     <textarea class="marker-description" rows="6"></textarea>
     <div class="row">
         <button class="btn btn-default" id="insert-marker-btn">Place it!</button>
         <button class="btn btn-default" id="cancel-marker-btn">Cancel</button>
     </div>
+</template>
+
+<template name="markerInfo">
+    <h4>{{title}}</h4>
+    <p>{{description}}</p>
+    <button class="btn btn-default" id="go-to-street">Go to Street View</button>
 </template>

@@ -51,7 +51,22 @@ Template.app.events({
                 map: map
             });
         }
+    },
 
+    // place marker
+    'click #insert-marker-btn': function(){
+        Session.set('insertingMarker', false);
+        Session.set('newMarkerAdded', false);
+        var map = GoogleMaps.maps.appMap.instance;
+        var panorama = map.getStreetView();
+        if(panorama){
+            var pos = panorama.getLocation();
+            panorama.setVisible(false);
+            var description = $('.marker-description').val();
+            var title = $('.marker-title').val();
+            // turn this insertion into a meteor.method
+            Markers.insert({lat: pos.latLng.G, lng: pos.latLng.K, description: description, title: title});
+        }
     }
 });
 
@@ -89,14 +104,28 @@ Template.app.helpers({
 
     insertingMarker: function(){
         return Session.get('insertingMarker');
+    },
+
+    displayInfo: function(){
+        return Session.get('displayInfo');
     }
 });
+
+Template.markerInfo.helpers({
+    title: function(){
+        return Session.get('markerTitle');
+    },
+
+    description: function(){
+        return Session.get('markerDescription');
+    }
+})
 
 Template.app.onCreated(function(){
     GoogleMaps.ready('appMap', function(map){
         google.maps.event.addListener(map.instance, 'click', function(evt){
-            // eventually move this insertion to Meteor.methods
                 console.log(evt.latLng);
+                Session.set('displayInfo', false);
                 // for some reason lat is G and lng is K
                 if(tempMarker){
                     tempMarker.setMap(null);
@@ -117,13 +146,17 @@ Template.app.onCreated(function(){
             added: function(document){
                 var marker = new google.maps.Marker({
                     draggable: false,
-                    animation: google.maps.Animation.DROP,
                     position: new google.maps.LatLng(document.lat, document.lng),
                     map: map.instance,
                     id: document._id
                 });
-
+                Session.set('markerTitle', document.title);
+                Session.set('markerDescription', document.description);
                 markers[marker.id] = marker;
+                google.maps.event.addListener(markers[marker.id], 'click', function(){
+                    console.log('marker clicked');
+                    Session.set('displayInfo', true);
+                });
             },
 
             removed: function(document){

@@ -1,7 +1,7 @@
 prerenderio.set('prerenderToken', 'FvQuRtoKHuD95tuuAkEW');
 Meteor.startup(function(){
     // for debugging
-    Markers.remove({});
+    // Markers.remove({});
 
     // prerenderio.set('prerenderToken', 'FvQuRtoKHuD95tuuAkEW');
 });
