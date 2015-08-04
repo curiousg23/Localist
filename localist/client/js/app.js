@@ -162,9 +162,12 @@ Template.markerInfo.helpers({
 Template.app.onCreated(function(){
     GoogleMaps.ready('appMap', function(map){
         google.maps.event.addListener(map.instance, 'click', function(evt){
-                console.log(evt.latLng);
-                Session.set('displayInfo', false);
-                // for some reason lat is G and lng is K
+            if(Session.get('displayInfo') === true){
+                // reset if on someone's marker
+                Session.set('insertingMarker', false);
+                Session.set('newMarkerAdded', false);
+            }
+            else{
                 if(tempMarker){
                     tempMarker.setMap(null);
                 }
@@ -176,6 +179,8 @@ Template.app.onCreated(function(){
                 Session.set('newMarkerAdded', true);
                 Session.set('newMarkerAddedLat', evt.latLng.G);
                 Session.set('newMarkerAddedLng', evt.latLng.K);
+            }
+                Session.set('displayInfo', false);
         });
 
         var markers = {};
