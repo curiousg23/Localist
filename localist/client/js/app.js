@@ -1,8 +1,10 @@
 Meteor.subscribe("markers");
 var tempMarker;
+var tempInfoWindow;
 Template.app.events({
     // go to street view
-    'click #add-marker-btn': function(){
+    'click #add-marker-btn': function(e,t){
+        e.preventDefault();
         var map = GoogleMaps.maps.appMap.instance;
         var panorama = map.getStreetView();
 
@@ -19,11 +21,14 @@ Template.app.events({
         Session.set('insertingMarker', true);
         panorama.setOptions(panoramaOptions);
         panorama.setVisible(true);
+        tempInfoWindow.close();
+        $('.overmap-container').css("visibility", "visible");
     },
     // don't add new marker
-    'click #no-marker-btn': function(){
-        Session.set('newMarkerAdded', false);
+    'click #no-marker-btn': function(e,t){
+        e.preventDefault();
         if(tempMarker){
+            tempInfoWindow.close();
             tempMarker.setMap(null);
         }
     },
@@ -41,17 +46,13 @@ Template.app.events({
             if(tempMarker){
                 tempMarker.setMap(null);
             }
-            tempMarker = new google.maps.Marker({
-                position: new google.maps.LatLng(pos.latLng.G, pos.latLng.K),
-                map: map
-            });
         }
+        $('.overmap-container').css("visibility", "hidden");
     },
 
     // place marker
     'click #insert-marker-btn': function(){
         Session.set('insertingMarker', false);
-        Session.set('newMarkerAdded', false);
         var map = GoogleMaps.maps.appMap.instance;
         var panorama = map.getStreetView();
         if(panorama){
@@ -72,10 +73,12 @@ Template.app.events({
                 zoom: panorama.getZoom()
             });
         }
+        $('.overmap-container').css("visibility", "hidden");
     },
-    // street view of someone's marker
-    'click #go-to-street': function(){
+    // street view of someone's marker--turn this into a meteor method
+    'click .go-to-street': function(){
         Session.set('isInStreetView', true);
+        Session.set('displayInfo', true);
         var map = GoogleMaps.maps.appMap.instance;
         var panorama = map.getStreetView();
         var panoObj = Markers.find({_id: Session.get('markerId')}).fetch()[0];
@@ -92,15 +95,18 @@ Template.app.events({
         }
         panorama.setOptions(panoramaOptions);
         panorama.setVisible(true);
+        $('.overmap-container').css("visibility", "visible");
     },
     // go back to the map
     'click #back-to-map': function(){
         Session.set('isInStreetView', false);
+        Session.set('displayInfo', false);
         var map = GoogleMaps.maps.appMap.instance;
         var panorama = map.getStreetView();
         if(panorama){
             panorama.setVisible(false);
         }
+        $('.overmap-container').css("visibility", "visible");
     }
 });
 
@@ -132,10 +138,6 @@ Template.app.helpers({
         }
     },
 
-    newMarkerAdded: function(){
-        return Session.get('newMarkerAdded');
-    },
-
     insertingMarker: function(){
         return Session.get('insertingMarker');
     },
@@ -161,11 +163,11 @@ Template.markerInfo.helpers({
 
 Template.app.onCreated(function(){
     GoogleMaps.ready('appMap', function(map){
+        // drop marker on click
         google.maps.event.addListener(map.instance, 'click', function(evt){
             if(Session.get('displayInfo') === true){
                 // reset if on someone's marker
                 Session.set('insertingMarker', false);
-                Session.set('newMarkerAdded', false);
             }
             else{
                 if(tempMarker){
@@ -175,8 +177,18 @@ Template.app.onCreated(function(){
                     position: new google.maps.LatLng(evt.latLng.G, evt.latLng.K),
                     map: map.instance
                 });
+                tempInfoWindow = new google.maps.InfoWindow({
+                    content: "<a href='#' id='add-marker-btn'>Place marker</a><br><a href='#' id='no-marker-btn'>Cancel</a>",
+                    map: map.instance
+                });
+                google.maps.event.addListener(tempInfoWindow, 'closeclick', function(evt){
+                    if(tempMarker){
+                        tempMarker.setMap(null);
+                    }
+                });
+                tempInfoWindow.open(map.instance, tempMarker);
+
                 // confirm if they want to put marker here
-                Session.set('newMarkerAdded', true);
                 Session.set('newMarkerAddedLat', evt.latLng.G);
                 Session.set('newMarkerAddedLng', evt.latLng.K);
             }
@@ -184,6 +196,7 @@ Template.app.onCreated(function(){
         });
 
         var markers = {};
+        var markerInfos = {};
         Markers.find().observe({
             added: function(document){
                 var marker = new google.maps.Marker({
@@ -195,9 +208,20 @@ Template.app.onCreated(function(){
                 Session.set('markerTitle', document.title);
                 Session.set('markerDescription', document.description);
                 markers[marker.id] = marker;
+                var infoWindow = new google.maps.InfoWindow({
+                    content: document.title,
+                    map: map.instance
+                });
+                markerInfos[marker.id] = infoWindow;
+                markerInfos[marker.id].close();
+                google.maps.event.addListener(markers[marker.id], 'mouseover', function(){
+                    markerInfos[marker.id].open(map.instance, markers[marker.id]);
+                    google.maps.event.addListener(markerInfos[marker.id], 'closeclick', function(){
+                        markerInfos[marker.id].close();
+                    });
+                });
                 google.maps.event.addListener(markers[marker.id], 'click', function(){
                     console.log('marker clicked');
-                    Session.set('displayInfo', true);
                     Session.set('markerId', marker.id);
                 });
             },

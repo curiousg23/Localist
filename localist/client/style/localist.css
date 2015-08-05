@@ -297,3 +297,27 @@ header .header-content .header-content-inner p {
 	border-color: #FFF;
 	background-color: rgba(0, 0, 0, 0.3);
 }
+
+.map-btn{
+	background-color: transparent;
+}
+
+.map-btn:hover{
+	background-color: rgba(0, 0, 0, 0.3);
+}
+
+.gm-style-iw{
+	background-color: transparent;
+}
+
+#add-marker-btn{
+	font-family: alegreyaReg;
+	color: #000033;
+	text-align: left;
+}
+
+#no-marker-btn{
+	font-family: alegreyaReg;
+	color: #000033;
+	text-align: left;
+}
