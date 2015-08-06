@@ -16,7 +16,8 @@ Template.app.events({
                 heading: 45,
                 pitch: 10
             },
-            linksControl: false
+            linksControl: false,
+            addressControl: false
         }
         Session.set('insertingMarker', true);
         panorama.setOptions(panoramaOptions);
@@ -74,28 +75,6 @@ Template.app.events({
             });
         }
         $('.overmap-container').css("visibility", "hidden");
-    },
-    // street view of someone's marker--turn this into a meteor method
-    'click .go-to-street': function(){
-        Session.set('isInStreetView', true);
-        Session.set('displayInfo', true);
-        var map = GoogleMaps.maps.appMap.instance;
-        var panorama = map.getStreetView();
-        var panoObj = Markers.find({_id: Session.get('markerId')}).fetch()[0];
-        console.log(panoObj);
-        var panoramaOptions = {
-            enableCloseButton: false,
-            position: new google.maps.LatLng(panoObj.position.G, panoObj.position.K),
-            pov: {
-                heading: panoObj.pov.heading,
-                pitch: panoObj.pov.pitch,
-                zoom: panoObj.zoom
-            },
-            linksControl: false
-        }
-        panorama.setOptions(panoramaOptions);
-        panorama.setVisible(true);
-        $('.overmap-container').css("visibility", "visible");
     },
     // go back to the map
     'click #back-to-map': function(){
@@ -164,6 +143,8 @@ Template.markerInfo.helpers({
 Template.app.onCreated(function(){
     GoogleMaps.ready('appMap', function(map){
         // drop marker on click
+        var markers = {};
+        var markerInfos = {};
         google.maps.event.addListener(map.instance, 'click', function(evt){
             if(Session.get('displayInfo') === true){
                 // reset if on someone's marker
@@ -195,44 +176,85 @@ Template.app.onCreated(function(){
                 Session.set('displayInfo', false);
         });
 
-        var markers = {};
-        var markerInfos = {};
         Markers.find().observe({
-            added: function(document){
+            added: function(doc){
                 var marker = new google.maps.Marker({
                     draggable: false,
-                    position: new google.maps.LatLng(document.lat, document.lng),
+                    position: new google.maps.LatLng(doc.lat, doc.lng),
                     map: map.instance,
-                    id: document._id
+                    id: doc._id,
+                    title: doc.title
                 });
-                Session.set('markerTitle', document.title);
-                Session.set('markerDescription', document.description);
+                Session.set('markerTitle', doc.title);
+                Session.set('markerDescription', doc.description);
                 markers[marker.id] = marker;
-                var infoWindow = new google.maps.InfoWindow({
-                    content: document.title,
-                    map: map.instance
+
+                // label for markers
+                var markerLabel = new MapLabel({
+                    text: "",
+                    position: new google.maps.LatLng(doc.lat, doc.lng),
+                    map: map.instance,
+                    fontSize: 12,
+                    align: "left"
                 });
-                markerInfos[marker.id] = infoWindow;
-                markerInfos[marker.id].close();
+
+                markerInfos[marker.id] = markerLabel;
                 google.maps.event.addListener(markers[marker.id], 'mouseover', function(){
-                    markerInfos[marker.id].open(map.instance, markers[marker.id]);
-                    google.maps.event.addListener(markerInfos[marker.id], 'closeclick', function(){
-                        markerInfos[marker.id].close();
-                    });
+                    console.log('mouseover event');
+                    // offset label right amount
+                    var newLatlng = offsetLabel(map.instance, markers[marker.id].position);
+                    markerInfos[marker.id].set('position', newLatlng);
+                    markerInfos[marker.id].set('text', markers[marker.id].title);
+                });
+                google.maps.event.addListener(markers[marker.id], 'mouseout', function(){
+                    markerInfos[marker.id].set('text', '');
                 });
                 google.maps.event.addListener(markers[marker.id], 'click', function(){
                     console.log('marker clicked');
-                    Session.set('markerId', marker.id);
+                    Session.set('isInStreetView', true);
+                    Session.set('displayInfo', true);
+
+                    var panorama = map.instance.getStreetView();
+                    var panoObj = Markers.find({_id: marker.id}).fetch()[0];
+                    var panoramaOptions = {
+                        enableCloseButton: false,
+                        position: new google.maps.LatLng(panoObj.position.G, panoObj.position.K),
+                        pov: {
+                            heading: panoObj.pov.heading,
+                            pitch: panoObj.pov.pitch,
+                            zoom: panoObj.zoom
+                        },
+                        linksControl: false,
+                        addressControl: false
+                    }
+                    panorama.setOptions(panoramaOptions);
+                    panorama.setVisible(true);
+                    $('.overmap-container').css("visibility", "visible");
                 });
             },
 
-            removed: function(document){
-                markers[document._id].setMap(null);
-                google.maps.event.clearInstanceListeners(markers[document._id]);
-                delete markers[document._id];
+            removed: function(doc){
+                markers[doc._id].setMap(null);
+                google.maps.event.clearInstanceListeners(markers[doc._id]);
+                delete markers[doc._id];
             }
 
         });
 
     });
 });
+
+function offsetLabel(map, latLng){
+    // convert latlng into pixel
+    var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
+    var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
+    var scale = Math.pow(2, map.getZoom());
+    var markerPoint = map.getProjection().fromLatLngToPoint(latLng);
+    var pt = new google.maps.Point((markerPoint.x - bottomLeft.x) * scale, (markerPoint.y - topRight.y) * scale);
+    // offset
+    pt.x += 15;
+    pt.y -= 35;
+    // convert pixel back into latlng
+    var newLatlng = map.getProjection().fromPointToLatLng(new google.maps.Point(pt.x/scale + bottomLeft.x, pt.y/scale + topRight.y));
+    return newLatlng;
+}

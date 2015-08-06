@@ -16,6 +16,7 @@ Router.route('/map', function(){
 
 Router.onBeforeAction(function(){
     GoogleMaps.load();
+    GoogleMaps.loadUtilityLibrary('maplabel.js');
     console.log('action taken');
     this.next();
 },{only: ['Map']});
