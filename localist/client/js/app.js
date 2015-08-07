@@ -1,6 +1,6 @@
 Meteor.subscribe("markers");
 var tempMarker;
-var tempInfoWindow;
+var placeBox;
 Template.app.events({
     // go to street view
     'click #add-marker-btn': function(e,t){
@@ -22,14 +22,15 @@ Template.app.events({
         Session.set('insertingMarker', true);
         panorama.setOptions(panoramaOptions);
         panorama.setVisible(true);
-        tempInfoWindow.close();
+        placeBox.close(map);
         $('.overmap-container').css("visibility", "visible");
     },
     // don't add new marker
     'click #no-marker-btn': function(e,t){
+        console.log('called no-marker-btn');
         e.preventDefault();
+        placeBox.close();
         if(tempMarker){
-            tempInfoWindow.close();
             tempMarker.setMap(null);
         }
     },
@@ -142,6 +143,14 @@ Template.markerInfo.helpers({
 
 Template.app.onCreated(function(){
     GoogleMaps.ready('appMap', function(map){
+        var mapSettings = [{
+          elementType: "labels.icon",
+          stylers: [
+            { "visibility": "off" }
+          ]
+        }];
+        map.instance.setOptions({styles: mapSettings});
+
         // drop marker on click
         var markers = {};
         var markerInfos = {};
@@ -150,7 +159,7 @@ Template.app.onCreated(function(){
                 // reset if on someone's marker
                 Session.set('insertingMarker', false);
             }
-            else{
+            else if(typeof placeBox === "undefined" || !placeBox.getVisible()){
                 if(tempMarker){
                     tempMarker.setMap(null);
                 }
@@ -158,20 +167,38 @@ Template.app.onCreated(function(){
                     position: new google.maps.LatLng(evt.latLng.G, evt.latLng.K),
                     map: map.instance
                 });
-                tempInfoWindow = new google.maps.InfoWindow({
-                    content: "<a href='#' id='add-marker-btn'>Place marker</a><br><a href='#' id='no-marker-btn'>Cancel</a>",
-                    map: map.instance
-                });
-                google.maps.event.addListener(tempInfoWindow, 'closeclick', function(evt){
-                    if(tempMarker){
-                        tempMarker.setMap(null);
-                    }
-                });
-                tempInfoWindow.open(map.instance, tempMarker);
 
-                // confirm if they want to put marker here
+                var infoBoxPos = offsetLabel(map.instance, tempMarker.position, 15, 35);
+                var infoBoxOptions = {
+                    content: "<div><a href='#' id='add-marker-btn'>Place marker</a><br><a href='#' id='no-marker-btn'>Cancel</a></div>",
+                    boxStyle: {
+                        border: "none",
+                        textAlign: "left",
+                        backgroundColor: "transparent",
+                        width:"50px"
+                    },
+                    position: infoBoxPos,
+                    closeBoxURL: "",
+                    enableEventPropagation: true,
+                    zIndex:20000
+                };
+                placeBox = new InfoBox(infoBoxOptions);
+                placeBox.open(map.instance);
                 Session.set('newMarkerAddedLat', evt.latLng.G);
                 Session.set('newMarkerAddedLng', evt.latLng.K);
+            }
+            else{
+                ;
+                // tempInfoWindow = new google.maps.InfoWindow({
+                //     content: "<a href='#' id='add-marker-btn'>Place marker</a><br><a href='#' id='no-marker-btn'>Cancel</a>",
+                //     map: map.instance
+                // });
+                // google.maps.event.addListener(tempInfoWindow, 'closeclick', function(evt){
+                //     if(tempMarker){
+                //         tempMarker.setMap(null);
+                //     }
+                // });
+                // tempInfoWindow.open(map.instance, tempMarker);
             }
                 Session.set('displayInfo', false);
         });
@@ -202,7 +229,7 @@ Template.app.onCreated(function(){
                 google.maps.event.addListener(markers[marker.id], 'mouseover', function(){
                     console.log('mouseover event');
                     // offset label right amount
-                    var newLatlng = offsetLabel(map.instance, markers[marker.id].position);
+                    var newLatlng = offsetLabel(map.instance, markers[marker.id].position, 15, 35);
                     markerInfos[marker.id].set('position', newLatlng);
                     markerInfos[marker.id].set('text', markers[marker.id].title);
                 });
@@ -244,7 +271,7 @@ Template.app.onCreated(function(){
     });
 });
 
-function offsetLabel(map, latLng){
+function offsetLabel(map, latLng, offsetX, offsetY){
     // convert latlng into pixel
     var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
     var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
@@ -252,8 +279,8 @@ function offsetLabel(map, latLng){
     var markerPoint = map.getProjection().fromLatLngToPoint(latLng);
     var pt = new google.maps.Point((markerPoint.x - bottomLeft.x) * scale, (markerPoint.y - topRight.y) * scale);
     // offset
-    pt.x += 15;
-    pt.y -= 35;
+    pt.x += offsetX;
+    pt.y -= offsetY;
     // convert pixel back into latlng
     var newLatlng = map.getProjection().fromPointToLatLng(new google.maps.Point(pt.x/scale + bottomLeft.x, pt.y/scale + topRight.y));
     return newLatlng;
