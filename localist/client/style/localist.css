@@ -95,7 +95,7 @@ header .header-content .header-content-inner hr {
     margin: 30px auto;
 }
 
-header .header-content .header-content-inner p {
+header .header-content .header-content-inner .header-center {
     font-family: alegreyaReg;
     margin-bottom: 50px;
     padding-left: 25%;
@@ -347,5 +347,12 @@ header .header-content .header-content-inner p {
 }
 
 .container-fuzz{
-	background-color: rgba(209, 209, 209, 0.5) !important;
+	background: rgba(255, 255, 255, 0.8);
+}
+
+.about-pg-text{
+	padding-left: 0;
+	padding-right: 0;
+	/*padding-left: none !important;*/
+	text-align: left;
 }
