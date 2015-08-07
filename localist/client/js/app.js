@@ -22,7 +22,10 @@ Template.app.events({
         Session.set('insertingMarker', true);
         panorama.setOptions(panoramaOptions);
         panorama.setVisible(true);
-        placeBox.close(map);
+        placeBox.close();
+        if(tempMarker){
+            tempMarker.setMap(null);
+        }
         $('.overmap-container').css("visibility", "visible");
     },
     // don't add new marker
@@ -43,11 +46,7 @@ Template.app.events({
         var panorama = map.getStreetView();
         if(panorama){
             var pos = panorama.getLocation();
-
             panorama.setVisible(false);
-            if(tempMarker){
-                tempMarker.setMap(null);
-            }
         }
         $('.overmap-container').css("visibility", "hidden");
     },
@@ -58,9 +57,6 @@ Template.app.events({
         var map = GoogleMaps.maps.appMap.instance;
         var panorama = map.getStreetView();
         if(panorama){
-            if(tempMarker){
-                tempMarker.setMap(null);
-            }
             var pos = panorama.getLocation();
             panorama.setVisible(false);
             var description = $('.marker-description').val();
@@ -155,52 +151,44 @@ Template.app.onCreated(function(){
         var markers = {};
         var markerInfos = {};
         google.maps.event.addListener(map.instance, 'click', function(evt){
-            if(Session.get('displayInfo') === true){
-                // reset if on someone's marker
-                Session.set('insertingMarker', false);
+            if(tempMarker){
+                placeBox.close();
+                tempMarker.setMap(null);
             }
-            else if(typeof placeBox === "undefined" || !placeBox.getVisible()){
-                if(tempMarker){
-                    tempMarker.setMap(null);
-                }
-                tempMarker = new google.maps.Marker({
-                    position: new google.maps.LatLng(evt.latLng.G, evt.latLng.K),
-                    map: map.instance
-                });
+            tempMarker = new google.maps.Marker({
+                position: new google.maps.LatLng(evt.latLng.G, evt.latLng.K),
+                map: map.instance
+            });
 
-                var infoBoxPos = offsetLabel(map.instance, tempMarker.position, 15, 35);
-                var infoBoxOptions = {
-                    content: "<div><a href='#' id='add-marker-btn'>Place marker</a><br><a href='#' id='no-marker-btn'>Cancel</a></div>",
-                    boxStyle: {
-                        border: "none",
-                        textAlign: "left",
-                        backgroundColor: "transparent",
-                        width:"50px"
-                    },
-                    position: infoBoxPos,
-                    closeBoxURL: "",
-                    enableEventPropagation: true,
-                    zIndex:20000
-                };
-                placeBox = new InfoBox(infoBoxOptions);
-                placeBox.open(map.instance);
-                Session.set('newMarkerAddedLat', evt.latLng.G);
-                Session.set('newMarkerAddedLng', evt.latLng.K);
-            }
-            else{
-                ;
-                // tempInfoWindow = new google.maps.InfoWindow({
-                //     content: "<a href='#' id='add-marker-btn'>Place marker</a><br><a href='#' id='no-marker-btn'>Cancel</a>",
-                //     map: map.instance
-                // });
-                // google.maps.event.addListener(tempInfoWindow, 'closeclick', function(evt){
-                //     if(tempMarker){
-                //         tempMarker.setMap(null);
-                //     }
-                // });
-                // tempInfoWindow.open(map.instance, tempMarker);
-            }
-                Session.set('displayInfo', false);
+            placeBox = new google.maps.InfoWindow({
+                content: "<a href='#' id='add-marker-btn'>Place marker</a><br><a href='#' id='no-marker-btn'>Cancel</a>",
+                map: map.instance
+            });
+            placeBox.open(map.instance, tempMarker);
+            google.maps.event.addListener(placeBox, 'domready', function(){
+               // Reference to the DIV which receives the contents of the infowindow using jQuery
+               var iwOuter = $('.gm-style-iw');
+
+               /* The DIV we want to change is above the .gm-style-iw DIV.
+                * So, we use jQuery and create a iwBackground variable,
+                * and took advantage of the existing reference to .gm-style-iw for the previous DIV with .prev().
+                */
+               var iwBackground = iwOuter.prev();
+
+               // Remove the background shadow DIV
+               iwBackground.children(':nth-child(2)').css({'display' : 'none'});
+
+               // Remove the white background DIV
+               iwBackground.children(':nth-child(4)').css({'display' : 'none'});
+
+               // remove arrow
+               iwBackground.children(':nth-child(1)').attr('style', function(i,s){ return s + 'display: none !important;'});
+               iwBackground.children(':nth-child(3)').attr('style', function(i,s){ return s + 'display: none !important;'});
+            });
+
+            Session.set('newMarkerAddedLat', evt.latLng.G);
+            Session.set('newMarkerAddedLng', evt.latLng.K);
+            Session.set('displayInfo', false);
         });
 
         Markers.find().observe({
@@ -221,8 +209,11 @@ Template.app.onCreated(function(){
                     text: "",
                     position: new google.maps.LatLng(doc.lat, doc.lng),
                     map: map.instance,
-                    fontSize: 12,
-                    align: "left"
+                    fontSize: 13,
+                    fontFamily: "alegreyaReg",
+                    align: "left",
+                    fontColor: "#000033",
+                    strokeWeight: 0
                 });
 
                 markerInfos[marker.id] = markerLabel;
@@ -278,6 +269,7 @@ function offsetLabel(map, latLng, offsetX, offsetY){
     var scale = Math.pow(2, map.getZoom());
     var markerPoint = map.getProjection().fromLatLngToPoint(latLng);
     var pt = new google.maps.Point((markerPoint.x - bottomLeft.x) * scale, (markerPoint.y - topRight.y) * scale);
+
     // offset
     pt.x += offsetX;
     pt.y -= offsetY;

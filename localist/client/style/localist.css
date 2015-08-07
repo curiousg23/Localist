@@ -307,43 +307,32 @@ header .header-content .header-content-inner p {
 }
 
 /* white background and box outline */
-/*.gm-style > div:first-child > div + div > div:last-child > div > div:first-child > div
-{
+.gm-style > div:first-child > div + div > div:last-child > div > div:first-child > div{
     /* we have to use !important because we are overwritng inline styles */
-/*    background-color: transparent !important;
+    background-color: transparent !important;
     box-shadow: none !important;
     width: auto !important;
     height: auto !important;
-}*/
-
-/* arrow colour */
-/*.gm-style > div:first-child > div + div > div:last-child > div > div:first-child > div > div > div
-{
-	display: none !important;
-	box-shadow: none !important;
-    background-color: transparent !important;
-	border: none !important;
-}*/
+}
 
 /* close button */
-/*.gm-style > div:first-child > div + div > div:last-child > div > div:last-child
-{
-    margin-right: 5px;
+.gm-style > div:first-child > div + div > div:last-child > div > div:last-child{
+    display: none;
+	margin-right: 5px;
     margin-top: 5px;
-}*/
+}
 
 /* image icon inside close button */
-/*.gm-style > div:first-child > div + div > div:last-child > div > div:last-child > img
-{
+.gm-style > div:first-child > div + div > div:last-child > div > div:last-child > img{
     display: none;
-}*/
+}
 
 /* positioning of infowindow */
-/*.gm-style-iw
-{
+.gm-style-iw{
     top: 70px !important;
     left: 70px !important;
-}*/
+	text-align: left !important;
+}
 
 #add-marker-btn{
 	font-family: alegreyaReg;
@@ -355,4 +344,8 @@ header .header-content .header-content-inner p {
 	font-family: alegreyaReg;
 	color: #000033;
 	text-align: left;
+}
+
+.container-fuzz{
+	background-color: rgba(209, 209, 209, 0.5) !important;
 }
