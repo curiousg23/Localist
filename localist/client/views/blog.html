@@ -1,0 +1,59 @@
+<template name="blogLayout">
+    <div class="background-image-blog" style="position:relative;"></div>
+    <div style="position:absolute;">
+        {{> navbar}}
+    </div>
+    <div class="container-fuzz col-md-offset-3 col-md-6" style="position:fixed;z-index:1;top:10%;">
+        {{> postList}}
+    </div>
+</template>
+
+<template name="postList">
+    {{#each posts}}
+        <hr>
+        {{> postItem}}
+        <hr>
+    {{/each}}
+</template>
+
+<template name="postItem">
+    <h3><a href="/blog/{{_id}}">{{title}}</a></h3>
+    <!-- img goes here -->
+    <br/>
+    <p>{{description}}...<a href="/blog/{{_id}}">Read</a></p>
+</template>
+
+<template name="postPage">
+    <div class="background-image-blog" style="position:relative;"></div>
+    <div style="position:absolute;">
+        {{> navbar}}
+    </div>
+    <div class="container-fuzz col-md-offset-3 col-md-6" style="position:fixed;z-index:1;top:10%;">
+        <h2>{{title}}</h2>
+        <!-- img goes here -->
+        <br/>
+        <!-- for keeping newlines in the text -->
+        {{#each fullText}}
+            <p>{{this}}</p>
+        {{/each}}
+    </div>
+</template>
+
+<template name="insertPost">
+    <form id="insert-post-form">
+        <div class="form-group">
+            <label for="new-post-title">Title:</label>
+            <input id="new-post-title" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="new-post-description">Description:</label>
+            <textarea id="new-post-description" class="form-control" rows='6'></textarea>
+        </div>
+        <!-- uncomment when using actual markers -->
+        <!-- <div class="form-group">
+            <label for="new-post-id">Id of marker:</label>
+            <input id="new-post-id" class="form-control">
+        </div> -->
+        <button class="btn btn-default" type="submit">Submit form</button>
+    </form>
+</template>
