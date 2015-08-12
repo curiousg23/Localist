@@ -29,10 +29,6 @@ Router.route('/blog/:_id', {
     }
 });
 
-// Router.route('/blog/:id', function(){
-//     this.render('postPage', {data: Posts.find({_id: id})});
-// },{name: 'singlePost'});
-
 Router.onBeforeAction(function(){
     GoogleMaps.load();
     GoogleMaps.loadUtilityLibrary('maplabel.js');
