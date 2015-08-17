@@ -4,23 +4,22 @@
         {{> navbar}}
     </div>
     <div class="container-fuzz col-md-offset-3 col-md-6" style="position:fixed;z-index:1;top:10%;">
-        {{> postList}}
+        {{> posts}}
     </div>
 </template>
 
-<template name="postList">
-    {{#each posts}}
-        <hr>
-        {{> postItem}}
-        <hr>
-    {{/each}}
+<template name="posts">
+    {{> pages}}
+    {{> pagesNav}}
 </template>
 
 <template name="postItem">
+    <hr>
     <h3><a href="/blog/{{_id}}">{{title}}</a></h3>
     <!-- img goes here -->
     <br/>
     <p>{{description}}...<a href="/blog/{{_id}}">Read</a></p>
+    <hr>
 </template>
 
 <template name="postPage">
@@ -31,6 +30,9 @@
     <div class="container-fuzz col-md-offset-3 col-md-6" style="position:fixed;z-index:1;top:10%;">
         <h2>{{title}}</h2>
         <!-- img goes here -->
+        {{#if containsImg}}
+            <img src="{{imgRequest}}" height="400" width="400" style="display:block;margin-left:auto;margin-right:auto;">
+        {{/if}}
         <br/>
         <!-- for keeping newlines in the text -->
         {{#each fullText}}
@@ -50,10 +52,14 @@
             <textarea id="new-post-description" class="form-control" rows='6'></textarea>
         </div>
         <!-- uncomment when using actual markers -->
-        <!-- <div class="form-group">
+        <div class="form-group">
             <label for="new-post-id">Id of marker:</label>
             <input id="new-post-id" class="form-control">
-        </div> -->
+        </div>
+        <div class="form-group">
+            <label for="new-post-contains-img">Contains Image:</label>
+            <input id="new-post-contains-img" class="form-control">
+        </div>
         <button class="btn btn-default" type="submit">Submit form</button>
     </form>
 </template>

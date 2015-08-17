@@ -1,10 +1,5 @@
 Meteor.subscribe("posts");
-Template.postList.helpers({
-    posts: function(){
-        // will need to put a limit here, and work out some pagination when the amount of posts gets too large
-        return Posts.find({});
-    }
-});
+Meteor.subscribe("markers");
 
 Template.postItem.helpers({
     title: function(){
@@ -23,6 +18,20 @@ Template.postPage.helpers({
 
     fullText: function(){
         return this.fullText;
+    },
+
+    containsImg: function(){
+        return this.containsImg;
+    },
+
+    imgRequest: function(){
+        var marker = Markers.find({_id: this.markerId}).fetch()[0];
+            lat = marker.lat,
+            lng = marker.lng,
+            heading = marker.pov.heading,
+            pitch = marker.pov.pitch;
+        var htmlStr = "https://maps.googleapis.com/maps/api/streetview?size=400x400&location=" + lat + "," + lng + "&fov=90&heading=" + heading + "&pitch=" + pitch;
+        return htmlStr;
     }
 });
 
@@ -31,9 +40,8 @@ Template.insertPost.events({
         e.preventDefault();
         var title = $('#new-post-title').val();
         var description = $('#new-post-description').val();
-        // var id = $('#new-post-id').val();
-        //     var heading = marker.pov.heading;
-        //     var pitch = marker.pov.pitch;
+        var id = $('#new-post-id').val();
+        var containsImg = $('#new-post-contains-img').val();
         var counter = 0;
         var fullText = description.split('\n');
         console.log(fullText.length);
@@ -47,17 +55,17 @@ Template.insertPost.events({
         }
         description = description.substring(0, i);
 
+        // Posts.insert({
+        //     title: title,
+        //     description: description,
+        //     fullText: fullText
+        // });
         Posts.insert({
             title: title,
             description: description,
-            fullText: fullText
+            fullText: fullText,
+            markerId: id,
+            containsImg: containsImg
         });
-        //     Posts.insert({
-        //         title: title,
-        //         description: description,
-        //         fullText: fullText,
-        //         heading: heading,
-        //         pitch: pitch
-        //     });
     }
 });
